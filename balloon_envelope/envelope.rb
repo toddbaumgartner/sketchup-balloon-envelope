@@ -1,4 +1,4 @@
-# Sketchup Envelope Draweing Thingee
+# Sketchup Envelope Drawing Thingee
 # <todd.baumgartner@gmail.com> 3/20/2014
 # Sorry for how awful this code is, I am still learning the API
 # This one will read the output of Deering_Gore_Pattern
@@ -73,7 +73,7 @@ def draw_panel(sta, width)
 		text = entities.add_text "Station #{sta.round(2)}", point
 end
 
-def draw_panel_disc(radius,sta, height, width, num_gores)
+def draw_panel_disc(radius,sta, height, width, num_gores,panel)
 		entities = @entities
 		circum = radius * 2 * Math::PI	
 		z = 0
@@ -105,7 +105,12 @@ def draw_panel_disc(radius,sta, height, width, num_gores)
 
 				if arr.size > 3  && pt2 != [0,0,0] && pt4 != [0,0,0]
 		    			new_face = entities.add_face arr
-				     	new_face.material = "red"
+					if @colorgrid[panel] != nil && @colorgrid[panel][gore] != nil
+					     	new_face.material = "##{@color[@colorgrid[panel][gore]]}"
+					else
+					     	new_face.material = "white"
+
+					end
 					new_face.pushpull 0.125
 				end
 			end
@@ -135,6 +140,7 @@ def draw_envelope
   @last_sta = 0
   @last_width = 0
   @last_gore = Hash.new
+  @colorgrid = Hash.new
   @last_gore[1] = [0,0,0]
 
   # Parse the output CSV from the Deering_Gore_pattern.xlsm file
@@ -148,6 +154,15 @@ def draw_envelope
 
 
   if (@EnvelopeCSV) != nil
+  	CSV.foreach(@EnvelopeCSV) do |row|	# First time around, get the color grid
+
+		for idx in 0..row.size do 
+			if row[idx] ==  "Color Chart Values"
+				row.shift idx + 1
+				@colorgrid[row.shift.to_i]=row	# Populate Color Grid with contents of line
+			end
+		end
+	end
   	CSV.foreach(@EnvelopeCSV) do |row|
 		sta = row[2].to_f
 		radius = row[3].to_f
@@ -162,7 +177,6 @@ def draw_envelope
 			
 			puts "Station #{sta.round(2)}ft Radius #{radius.round(2)}in Width #{width.round(2)}in Height #{height.round(2)}in Gores: #{num_gores}"
 		
-		
 			centerpoint = Geom::Point3d.new(0,0,height * 12)
 			vector = Geom::Vector3d.new 0,0,1
 		 	vector2 = vector.normalize!
@@ -171,8 +185,9 @@ def draw_envelope
 			else
 			   radius = radius * 12
 			end
+			panel = panel + 1
 	
-			draw_panel_disc(radius, sta, height, width, num_gores)
+			draw_panel_disc(radius, sta, height, width, num_gores, panel )
 			@last_sta = sta
 			@last_width = width
 			@last_height = height
