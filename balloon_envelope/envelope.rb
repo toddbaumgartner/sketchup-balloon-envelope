@@ -20,7 +20,7 @@ require 'csv';
 require 'sketchup.rb'
 
 
-# These are not used as of yet, but these are 18 standard colors
+# These are actually used now, 18 standard colors
 @color=Hash.new
 @color['red'] = 'e8112d'
 @color['orange'] = 'f74902'
@@ -185,9 +185,31 @@ def draw_envelope
 			else
 			   radius = radius * 12
 			end
-			panel = panel + 1
-	
-			draw_panel_disc(radius, sta, height, width, num_gores, panel )
+#			panel = panel + 1
+#			draw_panel_disc(radius, sta, height, width, num_gores, panel )
+
+                # Figure where fabric edges would be
+#
+               @fabsize = 60
+#
+               @mid = (@last_sta * 12).to_i / @fabsize
+               @curmid = (sta * 12).to_i / @fabsize
+               @widratio = width / sta
+               @heightratio = height / sta
+               @width = @mid * @fabsize * @widratio / 12       
+               @height = @mid * @fabsize * @heightratio / 12   
+               #puts "Last Sta: #{@last_sta} LastMid: #{@mid * @fabsize / 12} Next: #{sta} CurMid: #{@curmid * @fabsize /12} Width: #{@width} Ratio: #{@ratio.round(2)}"
+#       
+               if (@curmid != @mid)    
+                       panel = panel + 1
+                       draw_panel_disc(radius, @curmid, @height, @width, num_gores, panel)
+               end
+#
+
+
+
+
+
 			@last_sta = sta
 			@last_width = width
 			@last_height = height
