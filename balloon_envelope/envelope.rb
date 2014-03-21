@@ -143,14 +143,17 @@ def draw_envelope
   @colorgrid = Hash.new
   @last_gore[1] = [0,0,0]
 
+  @EnvelopeCSV = UI.openpanel("Open Envelope CSV File", "c:/", "*.csv")
+
+
   # Parse the output CSV from the Deering_Gore_pattern.xlsm file
-  Paths.each do |path|
-  	try = path + '/' + CSVName
-  	if File.exists?(try)
-		@EnvelopeCSV = try
-		puts "Using: #{@EnvelopeCSV}"
-  	end
-  end
+#  Paths.each do |path|
+#  	try = path + '/' + CSVName
+#  	if File.exists?(try)
+#		@EnvelopeCSV = try
+#		puts "Using: #{@EnvelopeCSV}"
+#  	end
+#  end
 
 
   if (@EnvelopeCSV) != nil
