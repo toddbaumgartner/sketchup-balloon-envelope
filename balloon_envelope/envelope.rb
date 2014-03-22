@@ -138,21 +138,21 @@ def draw_envelope
   @pt2 = [0, 0, 0]
   @pt3 = [0, 0, 0]
   @pt4 = [0, 0, 0]  
-  @last_sta = 0
-  @last_width = 0
-  @last_rad = 0
-  @last_gore = Hash.new
   @colorgrid = Hash.new
+  @last_gore = Hash.new
   @last_gore[1] = [0,0,0]
-
+  last_sta = 0
+  last_rad = 0
+  lastradratio = 1
+  radratio = 1
 
 
   # With four params, it shows a drop down box for prompts that have
   # pipe-delimited lists of options. In this case, the Gender prompt
   # is a drop down instead of a text box.
-#  prompts = ["What is your Name?", "What is your Age?", "Panel Shape"]
-#  defaults = ["Enter name", "", "Male"]
-#  list = ["", "", "Natural Boundries|Fabric Width"]
+  #  prompts = ["What is your Name?", "What is your Age?", "Panel Shape"]
+  #  defaults = ["Enter name", "", "Male"]
+  #  list = ["", "", "Natural Boundries|Fabric Width"]
   prompts = ["Panel Shape"]
   defaults = ["Natural Boundries"]
   list = ["Natural Boundries|Fabric Width"]
@@ -161,7 +161,8 @@ def draw_envelope
     shape = input[0]
   end
 
-  model.rendering_options["EdgeDisplayMode"]=1    # 0 to hide edges
+  model.rendering_options["EdgeDisplayMode"] =1    # 0 to hide edges
+  model.rendering_options["SilhouetteWidth"] = 0
 
   @EnvelopeCSV = UI.openpanel("Open Envelope CSV File", "c:/", "*.csv")
 
@@ -176,6 +177,9 @@ def draw_envelope
 
 
   if (@EnvelopeCSV) != nil
+    UI.messagebox("Here goes.. Sketchup may take a minute to render")
+    status = model.start_operation('Draw Envelope', true,true)
+#
   	CSV.foreach(@EnvelopeCSV) do |row|	# First time around, get the color grid
 		  for idx in 0..row.size do 
 			  if row[idx] ==  "Color Chart Values"
@@ -197,11 +201,15 @@ def draw_envelope
 			 radius = radius * 12   # Same here
 			end
 	
+      if width == 0 
+        num_gores = 8
+        width= 0.01
+
+      end
 		  if (sta != 0 && radius != 0 && width != 0) 
 			  if width > 0 
 				  num_gores = (circumference / width).round
 			  end
-			
 		
 			  centerpoint = Geom::Point3d.new(0,0,height)
 			  vector = Geom::Vector3d.new 0,0,1
@@ -210,36 +218,35 @@ def draw_envelope
 		    # 
 		    if shape == "Natural Boundries"
 			    panel = panel + 1
-			    draw_panel_disc(radius, height,  num_gores, panel )
+
+			    draw_panel_disc(radius, height, num_gores, panel)
 		    else
          	# Figure where fabric edges would be
        		@fabsize = 60         # Width of fabric 
-      		@mid = (@last_sta * 12).to_i / @fabsize     # Find last panel edge based on last station marker
+      		@mid = (last_sta * 12).to_i / @fabsize     # Find last panel edge based on last station marker
 	       	@curmid = (sta * 12).to_i / @fabsize        # Find current panel edge based on current station marker
-          if (@last_sta != 0 ) 
-         		@lastradratio = @last_rad / @last_sta       # Theres probably a better way to do this
+          if (last_sta != 0 ) 
+         		lastradratio = last_rad / last_sta       # Theres probably a better way to do this
           end
-       		@radratio = radius / sta                 # Theres probably a better way to do this
+       		radratio = radius / sta                 # Theres probably a better way to do this
        		@heightratio = height / sta           # Ditto
-          @avgradratio = (@lastradratio + @radratio)  / 2.0
+          @avgradratio = (lastradratio + radratio)  / 2.0
        		@radius = @mid * @fabsize / 12 * @avgradratio 
        		@height = @mid * @fabsize * @heightratio / 12   
          		if (@curmid != @mid)    
               	panel = panel + 1
                 draw_panel_disc(@radius, @height, num_gores, panel)
                 #
-
-
-                puts ">Station #{@mid * @fabsize / 12}, Radius #{@radius.round(2)} Width #{@width.round(2)} Height #{@height}, #{num_gores}, #{panel} RadRatio #{@radratio.round(2)} LastRadRatio #{@lastradratio.round(2)} "
+                #puts ">Station #{@mid * @fabsize / 12}, Radius #{@radius.round(2)} Width #{@width.round(2)} Height #{@height}, #{num_gores}, #{panel}"
          		end
 		    end
 
-        puts "Station #{sta.round(2)} Radius #{radius.round(2)} Width #{width.round(2)} Height #{height.round(2)} Gores #{num_gores} RadRatio #{@radratio.round(2)} "
-			  @last_sta = sta
-			  @last_width = width
-			  @last_height = height
-			  @last_rad = radius
+        puts "Panel #{panel} Station #{sta.round(2)} Radius #{radius.round(2)} Height #{height.round(2)} Gores #{num_gores}"
+			  last_sta = sta
+			  last_rad = radius
 		  end
+      model.commit_operation() 
+
 	  end
   end
 end
