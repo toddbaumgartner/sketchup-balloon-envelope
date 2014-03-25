@@ -82,13 +82,27 @@ def draw_panel_disc(radius, height, num_gores,panel)
 		pt1 = [0,0,0]
 		pt2 = [0,0,0]
 
+     puts "Const: #{@const}"
+    if @const == 1  # Half gore construction
+      num_gores = num_gores * 2
+      puts  "Doing half gore"
+  
+    end
+
 		for gore in 0..num_gores
 			slice = 360.0 / num_gores		# Split envelope into slices based on number of gores- Use float instead of integer
 			degs = slice * gore
 			radians = degs * Math::PI / 180
-			x=origin[0] + radius*Math.cos(radians); 		# Determine location on circumference for panel edges
-			y=origin[1] + radius*Math.sin(radians); 
-			z=origin[2] + (height)
+
+      if @const == 1  && gore % 2 == 1
+        x=origin[0] + radius*Math.cos(radians) * 0.9; 		# Determine location on circumference for panel edges
+        y=origin[1] + radius*Math.sin(radians) * 0.9;
+        z=origin[2] + (height)
+      else
+  			x=origin[0] + radius*Math.cos(radians); 		# Determine location on circumference for panel edges
+  			y=origin[1] + radius*Math.sin(radians); 
+			  z=origin[2] + (height)
+      end
 			pt1=[x.round(3),y.round(3),z.round(3)]; 
 
 			if @last_gore[gore] != nil
@@ -141,6 +155,7 @@ def draw_envelope
   @colorgrid = Hash.new
   @last_gore = Hash.new
   @last_gore[1] = [0,0,0]
+  @const = 1
   last_sta = 0
   last_rad = 0
   lastradratio = 1
@@ -153,12 +168,13 @@ def draw_envelope
   #  prompts = ["What is your Name?", "What is your Age?", "Panel Shape"]
   #  defaults = ["Enter name", "", "Male"]
   #  list = ["", "", "Natural Boundries|Fabric Width"]
-  prompts = ["Panel Shape"]
-  defaults = ["Natural Boundries"]
-  list = ["Natural Boundries|Fabric Width"]
+  prompts = ["Panel Shape","Construction Style"]
+  defaults = ["Natural Boundries",2]
+  list = ["Natural Boundries|Fabric Width","1|2"]
   input = UI.inputbox(prompts, defaults, list, "What are we doing today?")
   if input != nil
     shape = input[0]
+    @const = input[1]
   end
 
   model.rendering_options["EdgeDisplayMode"] =1    # 0 to hide edges
